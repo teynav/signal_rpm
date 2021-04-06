@@ -1,0 +1,17 @@
+#!/bin/bash
+echo "The scripts removes all signal rpms in the directory it runs"
+echo Getting sudo && sudo echo "Got sudo privileage"
+sudo rm -rf signal*.rpm
+wget https://updates.signal.org/desktop/apt/pool/main/s/signal-desktop-beta/signal-desktop-beta_$1_amd64.deb -O signal.deb
+sudo alien  -r -g -v -c signal.deb 
+thedir=$(find . -maxdepth 1 -type d -iname "signal*")
+thereal=$(realpath $thedir)
+cd $thedir
+thespec=$(find . -maxdepth 1 -type f -iname "signal*" | sed "s/\.\///g")
+sudo sed -i "s/^Summary:/Summary: Signal Desktop Beta Application /g" $thespec 
+sudo sed -i "/%dir \"\/opt\/\"/d" $thespec
+sudo rpmbuild --buildroot="$thereal" -bb --target x86_64 "$thespec"
+sudo rm -rf $thedir
+therpm=$(find . -maxdepth 1 -type f -iname "signal*.rpm" )
+sudo dnf remove signal-desktop-beta 
+sudo rpm -i $therpm 
